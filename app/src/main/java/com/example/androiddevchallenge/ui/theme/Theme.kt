@@ -50,6 +50,8 @@ fun MyTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable() (
         LightColorPalette
     }
 
+    val clockTypography = clockTypography
+
     MaterialTheme(
         colors = colors,
         typography = typography,
