@@ -31,7 +31,6 @@ private val DarkColorPalette = darkColors(
     background = grey900,
     onBackground = white,
 
-    // How do I make custom color attributes, which varies depending on darkTheme is true or not?
     error = timerColorDark.paused,
     onError = timerColorDark.finished,
     secondaryVariant = timerColorDark.running
