@@ -33,7 +33,7 @@ class NumbersUtilTest {
             NumbersUtil.getDigitsInNumber(329)
         )
         assertArrayEquals(
-            arrayOf<Char?>('4', '8' ,'3' ,'2'),
+            arrayOf<Char?>('4', '8', '3', '2'),
             NumbersUtil.getDigitsInNumber(4832)
         )
         assertArrayEquals(

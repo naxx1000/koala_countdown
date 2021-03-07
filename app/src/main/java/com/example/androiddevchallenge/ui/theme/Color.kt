@@ -15,7 +15,6 @@
  */
 package com.example.androiddevchallenge.ui.theme
 
-import androidx.compose.material.darkColors
 import androidx.compose.ui.graphics.Color
 
 val grey200 = Color(0xFFE0E0E0)
@@ -32,8 +31,6 @@ val green100 = Color(0xFFDCEDC8)
 val green900 = Color(0xFF33691E)
 val red100 = Color(0xFFFFCCBC)
 val red900 = Color(0xFFBF360C)
-
-private val tis = darkColors()
 
 val timerColorLight = TimerColor(
     running = blue100,
@@ -52,4 +49,3 @@ data class TimerColor(
     val paused: Color,
     val finished: Color
 )
-

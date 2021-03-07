@@ -1,3 +1,18 @@
+/*
+ * Copyright 2021 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.example.androiddevchallenge.ui.view
 
 import android.os.SystemClock
@@ -11,12 +26,24 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.rememberScrollableState
 import androidx.compose.foundation.gestures.scrollable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,7 +61,7 @@ import com.example.androiddevchallenge.NumbersUtil
 import com.example.androiddevchallenge.R
 import com.example.androiddevchallenge.ui.theme.clockTypography
 import kotlinx.coroutines.isActive
-import java.util.*
+import java.util.Calendar
 import kotlin.random.Random
 
 @Composable
@@ -44,22 +71,22 @@ fun Countdown() {
 
         val calendar = remember { Calendar.getInstance() }
 
-        var isFinished by rememberSaveable { mutableStateOf(false) }
-        var isRunning by rememberSaveable { mutableStateOf(true) }
-        var timeLeft by rememberSaveable { mutableStateOf(0L) }
-        var elapsedTime by rememberSaveable { mutableStateOf(0L) }
-        var initialTime by rememberSaveable { mutableStateOf(0L) }
-        var timeOfStart by remember { mutableStateOf(0L) }
+        val isFinished = rememberSaveable { mutableStateOf(false) }
+        val isRunning = rememberSaveable { mutableStateOf(true) }
+        val timeLeft = rememberSaveable { mutableStateOf(0L) }
+        val elapsedTime = rememberSaveable { mutableStateOf(0L) }
+        val initialTime = rememberSaveable { mutableStateOf(0L) }
+        val timeOfStart = remember { mutableStateOf(0L) }
 
-        var timerState by rememberSaveable { mutableStateOf(TimerState.Paused) }
+        val timerState = rememberSaveable { mutableStateOf(TimerState.Paused) }
 
-        LaunchedEffect(key1 = isRunning, key2 = initialTime, key3 = isFinished) {
+        LaunchedEffect(key1 = isRunning.value, key2 = initialTime.value, key3 = isFinished.value) {
 
-            timerState = when {
-                isFinished -> {
+            timerState.value = when {
+                isFinished.value -> {
                     TimerState.Finished
                 }
-                isRunning -> {
+                isRunning.value -> {
                     TimerState.Running
                 }
                 else -> {
@@ -67,33 +94,33 @@ fun Countdown() {
                 }
             }
 
-            if (isRunning) {
-                timeOfStart = SystemClock.uptimeMillis() - elapsedTime
-                while (isActive && isRunning) {
+            if (isRunning.value) {
+                timeOfStart.value = SystemClock.uptimeMillis() - elapsedTime.value
+                while (isActive && isRunning.value) {
                     withInfiniteAnimationFrameMillis {
-                        elapsedTime = (SystemClock.uptimeMillis() - timeOfStart)
-                        timeLeft = initialTime - elapsedTime
+                        elapsedTime.value = (SystemClock.uptimeMillis() - timeOfStart.value)
+                        timeLeft.value = initialTime.value - elapsedTime.value
 
-                        if (timeLeft < 1000) {
-                            isFinished = true
-                            isRunning = false
-                            elapsedTime = 0
-                            initialTime = 0
-                            timeLeft = initialTime - elapsedTime
+                        if (timeLeft.value < 1000) {
+                            isFinished.value = true
+                            isRunning.value = false
+                            elapsedTime.value = 0
+                            initialTime.value = 0
+                            timeLeft.value = initialTime.value - elapsedTime.value
                         } else {
-                            isFinished = false
+                            isFinished.value = false
                         }
                     }
                 }
             } else {
-                timeLeft = initialTime - elapsedTime
-                if (timeLeft >= 1000) {
-                    isFinished = false
+                timeLeft.value = initialTime.value - elapsedTime.value
+                if (timeLeft.value >= 1000) {
+                    isFinished.value = false
                 }
             }
         }
 
-        calendar.timeInMillis = timeLeft
+        calendar.timeInMillis = timeLeft.value
 
         Column(
             modifier = Modifier
@@ -104,37 +131,37 @@ fun Countdown() {
         ) {
             Box(contentAlignment = Alignment.Center) {
 
-                pauseAndPlayIndicator(timerState = timerState)
+                pauseAndPlayIndicator(timerState = timerState.value)
 
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
 
-                    var offset by remember { mutableStateOf(0f) }
+                    val offset = remember { mutableStateOf(0f) }
 
                     Column(
                         modifier = Modifier.scrollable(
                             orientation = Orientation.Vertical,
                             state = rememberScrollableState { delta ->
-                                isRunning = false
-                                offset += delta
-                                if (offset > 30) {
-                                    if (initialTime + 60_000 < 3_600_000 + elapsedTime) {
-                                        initialTime += 60_000
+                                isRunning.value = false
+                                offset.value += delta
+                                if (offset.value > 30) {
+                                    if (initialTime.value + 60_000 < 3_600_000 + elapsedTime.value) {
+                                        initialTime.value += 60_000
                                     } else {
-                                        elapsedTime = 0
-                                        initialTime = 3_599_000
+                                        elapsedTime.value = 0
+                                        initialTime.value = 3_599_000
                                     }
-                                    offset = 0f
-                                } else if (offset < -30) {
-                                    if (initialTime - 60_000 > 0) {
-                                        initialTime -= 60_000
+                                    offset.value = 0f
+                                } else if (offset.value < -30) {
+                                    if (initialTime.value - 60_000 > 0) {
+                                        initialTime.value -= 60_000
                                     } else {
-                                        elapsedTime = 0
-                                        initialTime = 0
+                                        elapsedTime.value = 0
+                                        initialTime.value = 0
                                     }
-                                    offset = 0f
+                                    offset.value = 0f
                                 }
                                 delta
                             }
@@ -183,24 +210,24 @@ fun Countdown() {
                         modifier = Modifier.scrollable(
                             orientation = Orientation.Vertical,
                             state = rememberScrollableState { delta ->
-                                isRunning = false
-                                offset += delta
-                                if (offset > 30) {
-                                    if (initialTime + 1_000 < 3_600_000 + elapsedTime) {
-                                        initialTime += 1_000
+                                isRunning.value = false
+                                offset.value += delta
+                                if (offset.value > 30) {
+                                    if (initialTime.value + 1_000 < 3_600_000 + elapsedTime.value) {
+                                        initialTime.value += 1_000
                                     } else {
-                                        elapsedTime = 0
-                                        initialTime = 3_599_000
+                                        elapsedTime.value = 0
+                                        initialTime.value = 3_599_000
                                     }
-                                    offset = 0f
-                                } else if (offset < -30) {
-                                    if (initialTime - 1_000 > 0) {
-                                        initialTime -= 1_000
+                                    offset.value = 0f
+                                } else if (offset.value < -30) {
+                                    if (initialTime.value - 1_000 > 0) {
+                                        initialTime.value -= 1_000
                                     } else {
-                                        elapsedTime = 0
-                                        initialTime = 0
+                                        elapsedTime.value = 0
+                                        initialTime.value = 0
                                     }
-                                    offset = 0f
+                                    offset.value = 0f
                                 }
                                 delta
                             }
@@ -241,8 +268,8 @@ fun Countdown() {
             }
 
             Row {
-                Box(Modifier.clickable { isRunning = !isRunning }) {
-                    when (timerState) {
+                Box(Modifier.clickable { isRunning.value = !isRunning.value }) {
+                    when (timerState.value) {
                         TimerState.Running ->
                             Image(
                                 modifier = Modifier.size(42.dp),
@@ -260,12 +287,14 @@ fun Countdown() {
                     }
                 }
                 Spacer(modifier = Modifier.width(20.dp))
-                Box(Modifier.clickable {
-                    elapsedTime = 0
-                    initialTime = 0
-                    isRunning = false
-                    isFinished = false
-                }) {
+                Box(
+                    Modifier.clickable {
+                        elapsedTime.value = 0
+                        initialTime.value = 0
+                        isRunning.value = false
+                        isFinished.value = false
+                    }
+                ) {
                     Image(
                         modifier = Modifier.size(42.dp),
                         painter = painterResource(id = R.drawable.ic_refresh),
@@ -308,7 +337,7 @@ fun DigitText(text: String, color: Color) {
     val seed = remember { Random.nextInt(0, 10) }
     Text(
         text = text,
-        style = getClockTypographyFromInt(4),//getClockTypographyFromInt(text.toInt() + seed),
+        style = getClockTypographyFromInt(4), // getClockTypographyFromInt(text.toInt() + seed),
         modifier = Modifier.width(40.dp),
         textAlign = TextAlign.Center,
         color = color
@@ -320,12 +349,9 @@ enum class TimerState {
 }
 
 private class TransitionData(
-    color: State<Color>,
-    shape: State<Dp>
-) {
-    val color by color
-    val shape by shape
-}
+    val color: State<Color>,
+    val shape: State<Dp>
+)
 
 @Composable
 private fun updateTransitionData(timerState: TimerState): TransitionData {
@@ -355,8 +381,8 @@ fun pauseAndPlayIndicator(timerState: TimerState) {
     Box(
         modifier = Modifier
             .size(200.dp)
-            .clip(RoundedCornerShape(transitionData.shape))
-            .background(transitionData.color)
+            .clip(RoundedCornerShape(transitionData.shape.value))
+            .background(transitionData.color.value)
     )
 }
 
