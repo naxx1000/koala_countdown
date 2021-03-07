@@ -6,22 +6,26 @@
 
 
 ## :scroll: Description
-A simple countdown application submission for the second week of the Jetpack Compose challenge.
+A simple countdown application (No koalas included).
 
 The application has a pause and reset button. The timer can count down from up to 59 minutes and 59 seconds.
 A shape behind the timer will visually show the user that the timer is changing state (Running, Pausing, Finished)
 The timer can be set by dragging up or down on either the minutes or seconds column. When dragging, the timer state is paused.
-<!--- Describe your app in one or two sentences -->
-
 
 ## :bulb: Motivation and Context
-<!--- Optionally point readers to interesting parts of your submission. -->
-<!--- What are you especially proud of? -->
+This is a submission for the second week of the Jetpack Compose challenge.
 
+Having two scrollable columns for both minutes and seconds provided some design challenges
+For example, since there are upper bounds to each column (0-59) when scrolling through the minutes column, the seconds will not change. But when the upper bound is reached, the seconds will also changed to its upper bound.
 
-## :camera_flash: Screenshots
-<!-- You can add more screenshots here if you like -->
-<img src="/results/screenshot_1.png" width="260">&emsp;<img src="/results/screenshot_2.png" width="260">
+An initial idea I had for the timer was to change the font type of a digit for every individual tick. When implementing this idea, a problem arose when the different fonts screwed with the size of the parent layouts. This caused the digits to not align with each other, and I decided to scrap it.
+I wanted to instead use a simpler solution, since I am still not familiar with Compose.
+This is why I went with a simple box with a RoundedCornerShape inside that changes color and corner size depending on the state of the timer.
+I also wanted the color to match both dark and light theme, but I had trouble implementing custom attributes to the Theme class. Instead I Material Theme's attributes; error, onError, and secondaryVariant, as my app was not using these colors anyway.
+Please let me know if there is a way to have more colors than the MaterialTheme, which will also change on light and dark mode. 😊
+
+## :camera_flash: Screenshots and video
+<img src="/results/screenshot_1.png" width="260">&emsp;<img src="/results/screenshot_2.png" width="260">&emsp;<img src="/results/video_1.gif" width="260">
 
 ## License
 ```
