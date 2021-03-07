@@ -16,6 +16,7 @@
 package com.example.androiddevchallenge
 
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.core.withInfiniteAnimationFrameMillis
@@ -25,13 +26,11 @@ import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -44,11 +43,10 @@ import kotlin.random.Random.Default.nextInt
 
 class MainActivity : AppCompatActivity() {
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MyTheme {
+            MyTheme(darkTheme = false) {
                 MyApp()
             }
         }
@@ -58,44 +56,108 @@ class MainActivity : AppCompatActivity() {
 // Start building your app here!
 @Composable
 fun MyApp() {
-    Surface(
-        modifier = Modifier
-            .fillMaxHeight()
-            .fillMaxWidth(),
-        color = MaterialTheme.colors.background
-    ) {
+    Surface(color = MaterialTheme.colors.background) {
 
-        val date = remember { mutableStateOf(Date().time) }
         val calendar = remember { Calendar.getInstance() }
-        val countdownTimeInMillis = rememberSaveable { mutableStateOf(18_000L) }
-        val isRunning = rememberSaveable { mutableStateOf(false) }
 
-        /* Sets the countdown value to the value of an observable state. The value produced is a
-           specific time in the future minus the current time. */
-        countdownTimeInMillis.value =
-            produceState(initialValue = countdownTimeInMillis.value, key1 = isRunning.value) {
-                date.value = Date().time + value
-                while (isActive && isRunning.value) {
+        var isRunning by rememberSaveable { mutableStateOf(true) }
+        var timeLeft by rememberSaveable { mutableStateOf(18_000L) }
+        var elapsedTime by rememberSaveable { mutableStateOf(0L) }
+        var initialTime by rememberSaveable { mutableStateOf(0L) }
+        var timeOfStart by remember { mutableStateOf(0L) }
+
+        LaunchedEffect(key1 = isRunning, key2 = initialTime) {
+            if (isRunning) {
+                timeOfStart = SystemClock.uptimeMillis() - elapsedTime
+                while (isActive && isRunning) {
                     withInfiniteAnimationFrameMillis {
-                        value = (date.value - System.currentTimeMillis())
-                        if (value < 1000) {
-                            cancel()
+                        elapsedTime = (SystemClock.uptimeMillis() - timeOfStart)
+                        timeLeft = initialTime - elapsedTime
+
+                        if (timeLeft < 1000) {
+                            isRunning = false
+                            elapsedTime = 0
+                            initialTime = 0
+                            timeLeft = initialTime - elapsedTime
                         }
                     }
                 }
-            }.value
+            } else {
+                timeLeft = initialTime - elapsedTime
+            }
+        }
 
-        calendar.timeInMillis = countdownTimeInMillis.value
+        calendar.timeInMillis = timeLeft
 
-        KoalaCountdownTimer(calendar)
-
-        Column {
-            Button(
-                onClick = {
-                    isRunning.value = !isRunning.value
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 30.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceAround
+        ) {
+            KoalaCountdownTimer(calendar)
+            Row {
+                Column {
+                    Button(
+                        onClick = {
+                            initialTime += 60_000
+                        }
+                    ) {
+                        Text(text = "+")
+                    }
+                    Button(
+                        onClick = {
+                            if (initialTime - 60000 > 0) {
+                                initialTime -= 60000
+                            } else {
+                                elapsedTime = 0
+                                initialTime = 0
+                            }
+                        }
+                    ) {
+                        Text(text = "-")
+                    }
                 }
-            ) {
-                Text(text = "Start/Pause")
+                Column {
+                    Button(
+                        onClick = {
+                            initialTime += 1000
+                        }
+                    ) {
+                        Text(text = "+")
+                    }
+                    Button(
+                        onClick = {
+                            if (initialTime - 1000 > 0) {
+                                initialTime -= 1000
+                            } else {
+                                elapsedTime = 0
+                                initialTime = 0
+                            }
+                        }
+                    ) {
+                        Text(text = "-")
+                    }
+                }
+            }
+            Row {
+                Button(
+                    onClick = {
+                        isRunning = !isRunning
+                    }
+                ) {
+                    Text(text = "Start/Pause")
+                }
+                Button(
+                    onClick = {
+                        elapsedTime = 0
+                        initialTime = 0
+                        isRunning = false
+                    }
+                ) {
+                    Text(text = "Clear")
+                }
             }
         }
     }
@@ -104,46 +166,100 @@ fun MyApp() {
 @Composable
 fun KoalaCountdownTimer(calendar: Calendar) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TimerDigits(calendarNumbers = calendar[Calendar.MINUTE])
-        Text(text = ":", style = MaterialTheme.typography.h1, textAlign = TextAlign.Center)
-        TimerDigits(calendarNumbers = calendar[Calendar.SECOND])
-    }
-}
-
-@Composable
-fun TimerDigits(calendarNumbers: Int) {
-    with(NumbersUtil.getDigitsInNumber(calendarNumbers)) {
-        when (size) {
-            2 -> {
-                DigitText(text = this[0].toString())
-                DigitText(text = this[1].toString())
+        Column {
+            TimerDigits(
+                calendarNumbers = calendar[Calendar.MINUTE].plus(1),
+                0.4f,
+                color = MaterialTheme.colors.onBackground
+            )
+            TimerDigits(
+                calendarNumbers = calendar[Calendar.MINUTE],
+                color = MaterialTheme.colors.primary
+            )
+            if (calendar[Calendar.MINUTE] > 0) {
+                TimerDigits(
+                    calendarNumbers = calendar[Calendar.MINUTE].minus(1),
+                    0.4f,
+                    color = MaterialTheme.colors.onBackground
+                )
+            } else {
+                TimerDigits(
+                    calendarNumbers = calendar[Calendar.MINUTE].minus(1),
+                    0f,
+                    color = MaterialTheme.colors.onBackground
+                )
             }
-            1 -> {
-                DigitText(text = "0")
-                DigitText(text = this[0].toString())
-            }
-            else -> {
-                DigitText(text = "0")
-                DigitText(text = "0")
+        }
+        Text(
+            text = ":",
+            style = MaterialTheme.typography.h1,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colors.primary
+        )
+        Column {
+            TimerDigits(
+                calendarNumbers = calendar[Calendar.SECOND].plus(1),
+                0.4f,
+                color = MaterialTheme.colors.onBackground
+            )
+            TimerDigits(
+                calendarNumbers = calendar[Calendar.SECOND],
+                color = MaterialTheme.colors.primary
+            )
+            if (calendar[Calendar.SECOND] > 0) {
+                TimerDigits(
+                    calendarNumbers = calendar[Calendar.SECOND].minus(1),
+                    0.4f,
+                    color = MaterialTheme.colors.onBackground
+                )
+            } else {
+                TimerDigits(
+                    calendarNumbers = calendar[Calendar.SECOND].minus(1),
+                    0f,
+                    color = MaterialTheme.colors.onBackground
+                )
             }
         }
     }
 }
 
 @Composable
-fun DigitText(text: String) {
+fun TimerDigits(calendarNumbers: Int, alpha: Float = 1.0f, color: Color) {
+    val numbersArray = NumbersUtil.getDigitsInNumber(calendarNumbers)
+    when (numbersArray.size) {
+        2 -> {
+            Row(modifier = Modifier.alpha(alpha)) {
+                DigitText(text = numbersArray[0].toString(), color = color)
+                DigitText(text = numbersArray[1].toString(), color = color)
+            }
+        }
+        1 -> {
+            Row(modifier = Modifier.alpha(alpha)) {
+                DigitText(text = "0", color = color)
+                DigitText(text = numbersArray[0].toString(), color = color)
+            }
+        }
+        else -> {
+            Row(modifier = Modifier.alpha(alpha)) {
+                DigitText(text = "0", color = color)
+                DigitText(text = "0", color = color)
+            }
+        }
+    }
+}
+
+@Composable
+fun DigitText(text: String, color: Color) {
     val seed = remember { nextInt(0, 10) }
     Text(
         text = text,
-        style = getClockTypographyFromInt(text.toInt() + seed),
+        style = getClockTypographyFromInt(4),//getClockTypographyFromInt(text.toInt() + seed),
         modifier = Modifier.width(40.dp),
-        textAlign = TextAlign.Center
+        textAlign = TextAlign.Center,
+        color = color
     )
 }
 
