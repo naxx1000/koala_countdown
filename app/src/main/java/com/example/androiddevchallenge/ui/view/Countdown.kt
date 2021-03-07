@@ -52,17 +52,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.androiddevchallenge.NumbersUtil
 import com.example.androiddevchallenge.R
-import com.example.androiddevchallenge.ui.theme.clockTypography
+import com.example.androiddevchallenge.ui.theme.typography
 import kotlinx.coroutines.isActive
 import java.util.Calendar
-import kotlin.random.Random
 
 @Composable
 fun Countdown() {
@@ -334,10 +331,9 @@ fun TimerDigits(calendarNumbers: Int, alpha: Float = 1.0f, color: Color) {
 
 @Composable
 fun DigitText(text: String, color: Color) {
-    val seed = remember { Random.nextInt(0, 10) }
     Text(
         text = text,
-        style = getClockTypographyFromInt(4), // getClockTypographyFromInt(text.toInt() + seed),
+        style = typography.h2,
         modifier = Modifier.width(40.dp),
         textAlign = TextAlign.Center,
         color = color
@@ -384,25 +380,4 @@ fun pauseAndPlayIndicator(timerState: TimerState) {
             .clip(RoundedCornerShape(transitionData.shape.value))
             .background(transitionData.color.value)
     )
-}
-
-private fun getClockTypographyFromInt(number: Int): TextStyle =
-    when (number) {
-        0 -> clockTypography.zero
-        1 -> clockTypography.one
-        2 -> clockTypography.two
-        3 -> clockTypography.three
-        4 -> clockTypography.four
-        5 -> clockTypography.five
-        6 -> clockTypography.six
-        7 -> clockTypography.seven
-        8 -> clockTypography.eight
-        9 -> clockTypography.nine
-        else -> clockTypography.zero
-    }
-
-@Preview
-@Composable
-fun CountdownPreview() {
-    Countdown()
 }

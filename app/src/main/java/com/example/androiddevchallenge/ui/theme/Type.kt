@@ -35,65 +35,13 @@ val typography = Typography(
         fontWeight = FontWeight.W600,
         fontSize = 32.sp
     ),
+    h2 = TextStyle(
+        fontFamily = FontFamily(Font(R.font.fredokaone_regular)),
+        fontSize = 42.sp
+    ),
     button = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.W500,
         fontSize = 14.sp
     )
-)
-
-val clockTypography = ClockTypography(
-    zero = TextStyle(
-        fontFamily = FontFamily(Font(R.font.akaya_telivigala_regular)),
-        fontSize = 42.sp
-    ),
-    one = TextStyle(
-        fontFamily = FontFamily(Font(R.font.comfortaa_variablefont_wght)),
-        fontSize = 42.sp
-    ),
-    two = TextStyle(
-        fontFamily = FontFamily(Font(R.font.dotgothic16_regular)),
-        fontSize = 42.sp
-    ),
-    three = TextStyle(
-        fontFamily = FontFamily(Font(R.font.fascinate_regular)),
-        fontSize = 42.sp
-    ),
-    four = TextStyle(
-        fontFamily = FontFamily(Font(R.font.fredokaone_regular)),
-        fontSize = 42.sp
-    ),
-    five = TextStyle(
-        fontFamily = FontFamily(Font(R.font.indie_flower_regular)),
-        fontSize = 42.sp
-    ),
-    six = TextStyle(
-        fontFamily = FontFamily(Font(R.font.josefin_sans_variablefont_wght)),
-        fontSize = 42.sp
-    ),
-    seven = TextStyle(
-        fontFamily = FontFamily(Font(R.font.lato_regular)),
-        fontSize = 42.sp
-    ),
-    eight = TextStyle(
-        fontFamily = FontFamily(Font(R.font.libre_baskerville_italic)),
-        fontSize = 42.sp
-    ),
-    nine = TextStyle(
-        fontFamily = FontFamily(Font(R.font.permanent_marker_regular)),
-        fontSize = 42.sp
-    ),
-)
-
-data class ClockTypography(
-    val zero: TextStyle,
-    val one: TextStyle,
-    val two: TextStyle,
-    val three: TextStyle,
-    val four: TextStyle,
-    val five: TextStyle,
-    val six: TextStyle,
-    val seven: TextStyle,
-    val eight: TextStyle,
-    val nine: TextStyle
 )
