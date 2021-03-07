@@ -1,12 +1,18 @@
 package com.example.androiddevchallenge.ui.view
 
 import android.os.SystemClock
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.core.withInfiniteAnimationFrameMillis
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.rememberScrollableState
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -15,11 +21,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.androiddevchallenge.NumbersUtil
+import com.example.androiddevchallenge.R
 import com.example.androiddevchallenge.ui.theme.clockTypography
 import kotlinx.coroutines.isActive
 import java.util.*
@@ -32,13 +44,29 @@ fun Countdown() {
 
         val calendar = remember { Calendar.getInstance() }
 
+        var isFinished by rememberSaveable { mutableStateOf(false) }
         var isRunning by rememberSaveable { mutableStateOf(true) }
         var timeLeft by rememberSaveable { mutableStateOf(0L) }
         var elapsedTime by rememberSaveable { mutableStateOf(0L) }
         var initialTime by rememberSaveable { mutableStateOf(0L) }
         var timeOfStart by remember { mutableStateOf(0L) }
 
-        LaunchedEffect(key1 = isRunning, key2 = initialTime) {
+        var timerState by rememberSaveable { mutableStateOf(TimerState.Paused) }
+
+        LaunchedEffect(key1 = isRunning, key2 = initialTime, key3 = isFinished) {
+
+            timerState = when {
+                isFinished -> {
+                    TimerState.Finished
+                }
+                isRunning -> {
+                    TimerState.Running
+                }
+                else -> {
+                    TimerState.Paused
+                }
+            }
+
             if (isRunning) {
                 timeOfStart = SystemClock.uptimeMillis() - elapsedTime
                 while (isActive && isRunning) {
@@ -47,15 +75,21 @@ fun Countdown() {
                         timeLeft = initialTime - elapsedTime
 
                         if (timeLeft < 1000) {
+                            isFinished = true
                             isRunning = false
                             elapsedTime = 0
                             initialTime = 0
                             timeLeft = initialTime - elapsedTime
+                        } else {
+                            isFinished = false
                         }
                     }
                 }
             } else {
                 timeLeft = initialTime - elapsedTime
+                if (timeLeft >= 1000) {
+                    isFinished = false
+                }
             }
         }
 
@@ -68,139 +102,176 @@ fun Countdown() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceAround
         ) {
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Box(contentAlignment = Alignment.Center) {
 
-                var offset by remember { mutableStateOf(0f) }
+                pauseAndPlayIndicator(timerState = timerState)
 
-                Column(
-                    modifier = Modifier.scrollable(
-                        orientation = Orientation.Vertical,
-                        state = rememberScrollableState { delta ->
-                            isRunning = false
-                            offset += delta
-                            if (offset > 30) {
-                                if (initialTime + 60_000 < 3_600_000 + elapsedTime) {
-                                    initialTime += 60_000
-                                } else {
-                                    elapsedTime = 0
-                                    initialTime = 3_599_000
-                                }
-                                offset = 0f
-                            } else if (offset < -30) {
-                                if (initialTime - 60_000 > 0) {
-                                    initialTime -= 60_000
-                                } else {
-                                    elapsedTime = 0
-                                    initialTime = 0
-                                }
-                                offset = 0f
-                            }
-                            delta
-                        }
-                    )
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TimerDigits(
-                        calendarNumbers = calendar[Calendar.MINUTE].plus(1),
-                        0.4f,
-                        color = MaterialTheme.colors.onBackground
-                    )
-                    TimerDigits(
-                        calendarNumbers = calendar[Calendar.MINUTE],
-                        color = MaterialTheme.colors.primary
-                    )
-                    if (calendar[Calendar.MINUTE] > 0) {
-                        TimerDigits(
-                            calendarNumbers = calendar[Calendar.MINUTE].minus(1),
-                            0.4f,
-                            color = MaterialTheme.colors.onBackground
+
+                    var offset by remember { mutableStateOf(0f) }
+
+                    Column(
+                        modifier = Modifier.scrollable(
+                            orientation = Orientation.Vertical,
+                            state = rememberScrollableState { delta ->
+                                isRunning = false
+                                offset += delta
+                                if (offset > 30) {
+                                    if (initialTime + 60_000 < 3_600_000 + elapsedTime) {
+                                        initialTime += 60_000
+                                    } else {
+                                        elapsedTime = 0
+                                        initialTime = 3_599_000
+                                    }
+                                    offset = 0f
+                                } else if (offset < -30) {
+                                    if (initialTime - 60_000 > 0) {
+                                        initialTime -= 60_000
+                                    } else {
+                                        elapsedTime = 0
+                                        initialTime = 0
+                                    }
+                                    offset = 0f
+                                }
+                                delta
+                            }
                         )
-                    } else {
+                    ) {
+                        if (calendar[Calendar.MINUTE] <= 58) {
+                            TimerDigits(
+                                calendarNumbers = calendar[Calendar.MINUTE].plus(1),
+                                0.4f,
+                                color = MaterialTheme.colors.onBackground
+                            )
+                        } else {
+                            TimerDigits(
+                                calendarNumbers = calendar[Calendar.MINUTE].plus(1),
+                                0f,
+                                color = MaterialTheme.colors.onBackground
+                            )
+                        }
                         TimerDigits(
-                            calendarNumbers = calendar[Calendar.MINUTE].minus(1),
-                            0f,
-                            color = MaterialTheme.colors.onBackground
+                            calendarNumbers = calendar[Calendar.MINUTE],
+                            color = MaterialTheme.colors.primary
                         )
+                        if (calendar[Calendar.MINUTE] > 0) {
+                            TimerDigits(
+                                calendarNumbers = calendar[Calendar.MINUTE].minus(1),
+                                0.4f,
+                                color = MaterialTheme.colors.onBackground
+                            )
+                        } else {
+                            TimerDigits(
+                                calendarNumbers = calendar[Calendar.MINUTE].minus(1),
+                                0f,
+                                color = MaterialTheme.colors.onBackground
+                            )
+                        }
                     }
-                }
-                Text(
-                    text = ":",
-                    style = MaterialTheme.typography.h1,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colors.primary
-                )
-                var scrollableState = rememberScrollableState(consumeScrollDelta = { 0f })
 
-                Column(
-                    modifier = Modifier.scrollable(
-                        orientation = Orientation.Vertical,
-                        state = rememberScrollableState { delta ->
-                            isRunning = false
-                            offset += delta
-                            if (offset > 30) {
-                                if (initialTime + 1_000 < 3_600_000 + elapsedTime) {
-                                    initialTime += 1_000
-                                } else {
-                                    elapsedTime = 0
-                                    initialTime = 3_599_000
-                                }
-                                offset = 0f
-                            } else if (offset < -30) {
-                                if (initialTime - 1_000 > 0) {
-                                    initialTime -= 1_000
-                                } else {
-                                    elapsedTime = 0
-                                    initialTime = 0
-                                }
-                                offset = 0f
-                            }
-                            delta
-                        }
-                    )
-                ) {
-                    TimerDigits(
-                        calendarNumbers = calendar[Calendar.SECOND].plus(1),
-                        0.4f,
-                        color = MaterialTheme.colors.onBackground
-                    )
-                    TimerDigits(
-                        calendarNumbers = calendar[Calendar.SECOND],
+                    Text(
+                        text = ":",
+                        style = MaterialTheme.typography.h1,
+                        textAlign = TextAlign.Center,
                         color = MaterialTheme.colors.primary
                     )
-                    if (calendar[Calendar.SECOND] > 0) {
-                        TimerDigits(
-                            calendarNumbers = calendar[Calendar.SECOND].minus(1),
-                            0.4f,
-                            color = MaterialTheme.colors.onBackground
+
+                    Column(
+                        modifier = Modifier.scrollable(
+                            orientation = Orientation.Vertical,
+                            state = rememberScrollableState { delta ->
+                                isRunning = false
+                                offset += delta
+                                if (offset > 30) {
+                                    if (initialTime + 1_000 < 3_600_000 + elapsedTime) {
+                                        initialTime += 1_000
+                                    } else {
+                                        elapsedTime = 0
+                                        initialTime = 3_599_000
+                                    }
+                                    offset = 0f
+                                } else if (offset < -30) {
+                                    if (initialTime - 1_000 > 0) {
+                                        initialTime -= 1_000
+                                    } else {
+                                        elapsedTime = 0
+                                        initialTime = 0
+                                    }
+                                    offset = 0f
+                                }
+                                delta
+                            }
                         )
-                    } else {
+                    ) {
+                        if (calendar[Calendar.SECOND] <= 58) {
+                            TimerDigits(
+                                calendarNumbers = calendar[Calendar.SECOND].plus(1),
+                                0.4f,
+                                color = MaterialTheme.colors.onBackground
+                            )
+                        } else {
+                            TimerDigits(
+                                calendarNumbers = calendar[Calendar.SECOND].plus(1),
+                                0f,
+                                color = MaterialTheme.colors.onBackground
+                            )
+                        }
                         TimerDigits(
-                            calendarNumbers = calendar[Calendar.SECOND].minus(1),
-                            0f,
-                            color = MaterialTheme.colors.onBackground
+                            calendarNumbers = calendar[Calendar.SECOND],
+                            color = MaterialTheme.colors.primary
                         )
+                        if (calendar[Calendar.SECOND] > 0) {
+                            TimerDigits(
+                                calendarNumbers = calendar[Calendar.SECOND].minus(1),
+                                0.4f,
+                                color = MaterialTheme.colors.onBackground
+                            )
+                        } else {
+                            TimerDigits(
+                                calendarNumbers = calendar[Calendar.SECOND].minus(1),
+                                0f,
+                                color = MaterialTheme.colors.onBackground
+                            )
+                        }
                     }
                 }
             }
+
             Row {
-                Button(
-                    onClick = {
-                        isRunning = !isRunning
+                Box(Modifier.clickable { isRunning = !isRunning }) {
+                    when (timerState) {
+                        TimerState.Running ->
+                            Image(
+                                modifier = Modifier.size(42.dp),
+                                painter = painterResource(id = R.drawable.ic_pause),
+                                contentDescription = "Pause timer",
+                                colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
+                            )
+                        else ->
+                            Image(
+                                modifier = Modifier.size(42.dp),
+                                painter = painterResource(id = R.drawable.ic_play_arrow),
+                                contentDescription = "Start timer",
+                                colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
+                            )
                     }
-                ) {
-                    Text(text = "Start/Pause")
                 }
                 Spacer(modifier = Modifier.width(20.dp))
-                Button(
-                    onClick = {
-                        elapsedTime = 0
-                        initialTime = 0
-                        isRunning = false
-                    }
-                ) {
-                    Text(text = "Clear")
+                Box(Modifier.clickable {
+                    elapsedTime = 0
+                    initialTime = 0
+                    isRunning = false
+                    isFinished = false
+                }) {
+                    Image(
+                        modifier = Modifier.size(42.dp),
+                        painter = painterResource(id = R.drawable.ic_refresh),
+                        contentDescription = "Reset timer to 0",
+                        colorFilter = ColorFilter.tint(MaterialTheme.colors.onBackground)
+                    )
                 }
             }
         }
@@ -244,6 +315,51 @@ fun DigitText(text: String, color: Color) {
     )
 }
 
+enum class TimerState {
+    Running, Finished, Paused
+}
+
+private class TransitionData(
+    color: State<Color>,
+    shape: State<Dp>
+) {
+    val color by color
+    val shape by shape
+}
+
+@Composable
+private fun updateTransitionData(timerState: TimerState): TransitionData {
+    val transition = updateTransition(timerState)
+    val color = transition.animateColor { state ->
+        when (state) {
+            TimerState.Finished -> MaterialTheme.colors.onError
+            TimerState.Running -> MaterialTheme.colors.secondaryVariant
+            TimerState.Paused -> MaterialTheme.colors.error
+        }
+    }
+    val shape = transition.animateDp { state ->
+        when (state) {
+            TimerState.Running -> 50.dp
+            TimerState.Finished -> 100.dp
+            TimerState.Paused -> 10.dp
+        }
+    }
+    return remember(transition) { TransitionData(color, shape) }
+}
+
+@Composable
+fun pauseAndPlayIndicator(timerState: TimerState) {
+
+    val transitionData = updateTransitionData(timerState)
+
+    Box(
+        modifier = Modifier
+            .size(200.dp)
+            .clip(RoundedCornerShape(transitionData.shape))
+            .background(transitionData.color)
+    )
+}
+
 private fun getClockTypographyFromInt(number: Int): TextStyle =
     when (number) {
         0 -> clockTypography.zero
@@ -258,3 +374,9 @@ private fun getClockTypographyFromInt(number: Int): TextStyle =
         9 -> clockTypography.nine
         else -> clockTypography.zero
     }
+
+@Preview
+@Composable
+fun CountdownPreview() {
+    Countdown()
+}

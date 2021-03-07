@@ -29,7 +29,12 @@ private val DarkColorPalette = darkColors(
     surface = yellow700,
     onSurface = white,
     background = grey900,
-    onBackground = white
+    onBackground = white,
+
+    // How do I make custom color attributes, which varies depending on darkTheme is true or not?
+    error = timerColorDark.paused,
+    onError = timerColorDark.finished,
+    secondaryVariant = timerColorDark.running
 )
 
 private val LightColorPalette = lightColors(
@@ -40,7 +45,11 @@ private val LightColorPalette = lightColors(
     surface = yellow900,
     onSurface = grey900,
     background = white,
-    onBackground = grey900
+    onBackground = grey900,
+
+    error = timerColorLight.paused,
+    onError = timerColorLight.finished,
+    secondaryVariant = timerColorLight.running
 )
 
 @Composable
@@ -50,8 +59,6 @@ fun MyTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable() (
     } else {
         LightColorPalette
     }
-
-    val clockTypography = clockTypography
 
     MaterialTheme(
         colors = colors,
