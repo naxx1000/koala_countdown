@@ -33,9 +33,7 @@ MaterialTheme, which will also change on light and dark mode. 😊</div>
 
 ## :camera_flash: Screenshots and video
 
-<img src="/results/screenshot_1.png" width="230">
-&emsp;<img src="/results/screenshot_2.png" width="230">
-&emsp;<img src="/results/video_1.gif" width="230">
+<img src="/results/screenshot_1.png" width="230">&emsp;<img src="/results/screenshot_2.png" width="230">&emsp;<img src="/results/video_1.gif" width="230">
 
 ## License
 
